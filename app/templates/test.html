@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.js"></script>
+    <script src="../static/modalF.js"></script>
+    <script src="../static/p5.js"></script>
+    <script src="../static/p5.sound.min.js"></script>
+    <script src="../static/ml5.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../static/style.css">
+
+</head>
+
+<body class="teal">
+
+
+    <div class="row">
+        <div class="col s12 m12 l12 center">
+            <h1 class="white-text">Nose</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col s8 m6 14 offset-s2 offset-m3 offset-14 white z-depth-2">
+            <form action="">
+                <div class="row">
+                    <div class="col s12 m12 l12 center">
+                        <input type="text" name="center" placeholder="Nickname" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col l12 m12 s12">
+                        <input type="color">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col s12 m12 l12 center">
+                        <button type="submit" class="btn red m-open" m-open="canvas">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="m-modal" m-modal="canvas">
+        <div class="m-body ">
+            <div class="row">
+                <div class="col s4 m4 l4" id="jugadores">
+
+                </div>
+
+                <div class="col s8 m8 l8" id="canvas">
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <script type="text/javascript">
+
+
+        var video;
+        var c;
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        let users = [];
+
+        var myUser = {};
+        var name;
+
+        let x = 0;
+        let y = 0;
+        let poseNet;
+        let human = null;
+        let skeleton = null;
+        var diam = 20;
+
+        var points = [];
+
+
+        let rectX, rectY, rectW, rectH;
+
+
+        $(document).ready(function () {
+            $('form').on('submit', function (e) {
+                e.preventDefault();
+
+                var name = $('input[type="text"]').val();
+                var color = $('input[type="color"]').val();
+                myUser = {
+                    name: name,
+                    color: color,
+                    id: socket.id,
+                    x_label: 0,
+                    y_label: 0,
+                    coins: 100
+                }
+                $('.m-open').modalF({ color: "#333" });
+                $('button').trigger('click');
+                c.show();
+                video.show();
+
+
+                socket.emit('addUser', myUser);
+            });
+
+            socket.on('users', function (data) {
+                users = data;
+            });
+
+        })
+
+        function setup() {
+
+
+            //c = createCanvas(windowWidth, windowHeight);
+            c = createCanvas(400, 400);
+
+            c.parent('canvas');
+
+
+            rectX = 150;
+            rectY = 150;
+            rectW = 100;
+            rectH = 100;
+
+            diam = 20
+
+            video = createCapture(VIDEO);
+            //video.parent('canvas');
+            video.size(400, 400);
+
+            c.hide();
+            video.hide();
+
+
+            poseNet = ml5.poseNet(video, onModelReady); //call onModelReady when setup
+            poseNet.on('pose', onPoseDetected); // call onPoseDetected when pose detected
+        }
+
+        function onModelReady() {
+            print("The PoseNet model is ready...");
+        }
+
+        function onPoseDetected(poses) {
+            // poses can contain an array of bodies (because PoseNet supports
+            // recognition for *multiple* human bodies at the same time
+            // however, for this demo, we are interested in only one human body
+            // which is at poses[0]
+            human = poses[0];
+        }
+
+
+        function draw() {
+
+            
+            background(220);
+            textSize(32);
+
+            //fill(245,10,80);
+
+            //rect(rectX, rectY, rectW, rectH, 10);
+
+            
+            /*
+            
+
+            if (isNoseInside(rectX, rectY, rectW, rectH)) {
+                console.log("Dentro")
+            } else {
+
+            }
+            */
+
+            drawPose();
+
+            $.each(users, function (index, u) {
+
+                fill(u.color);
+                ellipse(u.x, u.y, diam, diam);
+
+
+
+            })
+
+        }
+
+        function isNoseInside(x, y, w, h) {
+            //console.log(myUser.x,myUser.y,x,y)
+            if (myUser.x > x && myUser.x < x + w && myUser.y > y && myUser.y < y + h) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        
+        function drawPose() {
+            push();
+        
+            tint(100, 50);
+
+            if (video) {
+
+                translate(video.width, 0);
+
+                scale(-1, 1);
+
+                //image(video, 400,400); // draw the video to screen
+                video.loadPixels();                
+                image(video, 0, 0, 400, 400);
+                
+
+            }
+            //if a human has been detected, draw overlay shapes!
+
+            if (human != null) {
+                p = human.pose
+                let eyeR = p.rightEye;
+                let eyeL = p.leftEye;
+                let x_nose = p.nose.x;
+                let y_nose = p.nose.y;
+                myUser.x = x_nose;
+                myUser.y = y_nose;
+                //let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
+                socket.emit('updateNosePosition', myUser);
+
+            }
+        }
+
+        function windowResized() {
+            //resizeCanvas(windowWidth, windowHeight);
+            resizeCanvas(400,400);
+        }
+
+        var sketch_players = function (p) {
+
+            p.setup = function () {
+                var players_canva = p.createCanvas(500, 1000);
+                players_canva.parent('#jugadores');
+            };
+
+            p.draw = function () {
+                p.clear()
+                p.textSize(45)
+                p.fill("#fff");
+
+                p.text("Jugadores", 80, 50)
+
+
+                $.each(users, function (index, u) {
+
+                    p.textSize(24);
+                    p.fill(u.color);
+                    p.text(u.name + ': ' + u.coins, u.x_label, u.y_label);
+
+                });
+
+
+            };
+
+            p.windowResized = function () {
+                p.resizeCanvas(windowWidth, windowHeight);
+            };
+        };
+
+        var sk_players = new p5(sketch_players);
+
+    </script>
+
+
+
+</body>
+
+</html>
