@@ -17,3 +17,7 @@ https://github.com/CodingTrain/website/tree/master/learning/ml5/7.1_posenet/P5
 
 https://www.youtube.com/watch?v=skAAP4re31w&t=1017s&ab_channel=HernanCastilla
 
+
+#Toca
+
+https://medium.com/@devfelipe.mansilla/habilitar-c%C3%A1mara-microfono-en-chrome-para-localhost-o-paginas-inseguras-346ba2a3b919
