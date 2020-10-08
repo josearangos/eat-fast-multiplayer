@@ -3,7 +3,7 @@
 Activate venv
 source ../env-flappy-arm/bin/activate
 
-pip install flask
+pip install flask flask-socketio
 pip install flask-socketio
 
 python3 run.py
