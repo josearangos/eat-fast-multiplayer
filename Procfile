@@ -1,1 +1,1 @@
-web: guinicor app:app
+web: guinicor run:app
