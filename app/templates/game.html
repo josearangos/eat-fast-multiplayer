@@ -19,40 +19,54 @@
 
 </head>
 
-<body class="teal">
+
+
+
+<body class="light-blue darken-1">
+
+
+    
 
 
     <div class="row">
         <div class="col s12 m12 l12 center">
-            <h1 class="white-text">Nose</h1>
+            <h1 class="white-text">Eat Fast Multiplayer</h1>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col s8 m6 14 offset-s2 offset-m3 offset-14 white z-depth-2">
+    <div class="row formulario_ingreso" >
+        <div class="col s8 m6 14 offset-s2 offset-m3 offset-14 white z-depth-5">
             <form action="">
                 <div class="row">
                     <div class="col s12 m12 l12 center">
+                        <p><b>Ingrese Nickname:</b></p>
                         <input type="text" name="center" placeholder="Nickname" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col l12 m12 s12">
-                        <input type="color">
+                        <p><b>Seleccionar color de la boca:</b></p>
+                        <input type="color" >
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col s12 m12 l12 center">
-                        <button type="submit" class="btn red m-open" m-open="canvas">Send</button>
+                        <button type="submit" class="btn blue-grey darken-4 m-open" m-open="canvas">Jugar</button>
                     </div>
                 </div>
             </form>
-        </div>
+            <h4>Universidad de Antioquia</h4>
+            <h5>Comunicación II</h5>
+            <h6>By: Jose Alberto Arango Sánchez</h6>
+            <h6>2020-1</h6>            
+            
+            </div>
+        
     </div>
 
 
-    <div class="m-modal" m-modal="canvas">
+    <div class="m-modal" m-modal="canvas" >
         <div class="m-body ">
             <div class="row">
                 <div class="col s4 m4 l4" id="jugadores">
@@ -71,7 +85,9 @@
 
 
     <script type="text/javascript">
+    
 
+        
         var video;
         var c;
         var socket = io.connect('http://' + document.domain + ':' + location.port);
@@ -83,12 +99,17 @@
 
         var circles = []; // create an array to hold the DrawCircle objects
         var origin_circles = []
+        var cicles_info = [];
 
 
+        let Width_canvas = 1100;
+        let Height_canvas = 900;
 
         let faceapi;
         let detections;
         let mouth;
+
+        var mouths = [];
 
 
         var myUser = {};
@@ -98,10 +119,8 @@
         let y = 0;
         var diam = 20;
 
-        var points = [];
 
-
-        let rectX, rectY, rectW, rectH;
+        
 
 
         $(document).ready(function () {
@@ -116,8 +135,9 @@
                     id: socket.id,
                     x_label: 0,
                     y_label: 0,
-                    coins: 100,
-                    points_mouth: []
+                    coins: 0,
+                    points_mouth: [],
+                    detects: []
                 }
                 $('.m-open').modalF({ color: "#333" });
                 $('button').trigger('click');
@@ -133,6 +153,13 @@
             });
 
         })
+
+
+        socket.on('circles', function (data) {
+            cicles_info = data;
+            //console.log(cicles_info)
+        });
+
 
         const detection_options = {
             withLandmarks: true,
@@ -167,7 +194,7 @@
             // *** Method: move the circle downwards ***
             move: function () {
 
-                this.yPos += this.speed;               
+                this.yPos += this.speed;
 
                 // the circle is outside the canvas, retset its position at the top
                 if (this.yPos - this.diameter / 2 > height) {
@@ -178,50 +205,49 @@
 
         function setup() {
 
-            c = createCanvas(windowWidth / 2, windowHeight);
 
+            //c = createCanvas(windowWidth / 2, windowHeight);
+            c  = createCanvas(Width_canvas,Height_canvas)
+
+            //formulario_ingreso.style("display","none")
 
             //c = createCanvas(400, 400);
 
             c.parent('canvas');
 
-            for (var i = 0; i < n_balls; i++) {
-                var x = random(width);
-                var y = random(height / 3);
-                var d = random(20, 150);
-                var cc = color(random(255), random(255), 255);
-                var s = random(3, 10);
-                //var s = random(0.2, 3);
-
-                circles[i] = new DrawCircle(x, y, d, cc, s);
-                origin_circles[i] = new DrawCircle(x, y, d, cc, s);
+            if(cicles_info.length >0){
+                $.each(cicles_info, function (index, c) {                
+                var x = c.x;
+                var y = c.y
+                var d = c.d
+                var cc = color(c.cc[0], c.cc[1],c.cc[2]);
+                var s = c.s;
+                circles.push(new DrawCircle(x, y, d, cc, s));
+                origin_circles.push(new DrawCircle(x, y, d, cc, s));
+            });
             }
 
 
             video = createCapture(VIDEO);
             //video.parent('canvas');
-            video.size(windowWidth / 2, windowHeight)
+            //video.size(windowWidth / 2, windowHeight)
+            video.size(Width_canvas, Height_canvas)
+            
 
             c.hide();
             video.hide();
-
-
-
-
             faceapi = ml5.faceApi(video, detection_options, onModelReady)
-
-
-
-
-
-
         }
 
 
         function onModelReady() {
             console.log('ready!')
             console.log(faceapi)
+
             faceapi.detect(drawface)
+
+
+
         }
 
 
@@ -239,39 +265,53 @@
 
         function draw() {
 
-            background(220);
+            //background(220);
+            
 
             if (video) {
                 translate(video.width, 0);
                 scale(-1, 1);
                 video.loadPixels();
-                image(video, 0, 0, windowWidth / 2, windowHeight);
+                image(video, 0, 0, Width_canvas, Height_canvas);
             }
 
             // iterate over the circles array and call the methods of the DrawCircle object
-            for (var i = 0; i < circles.length; i++) {
-                circles[i].move();
-                circles[i].display();
-            }
+            if(circles.length > 0){
+           
+                for (var i = 0; i < circles.length; i++) {
+                    circles[i].move();
+                    circles[i].display();
+                }
 
-            // keep the number of circles on the canvas under 60
-            if (circles.length > 60) {
-                circles.shift();
+                // keep the number of circles on the canvas under 60
+                if (circles.length > 60) {
+                    circles.shift();
+                }
             }
-
 
             if (detections) {
                 if (detections.length > 0) {
                     //console.log(detections)
                     //drawBox(detections)
-                    drawLandmarks(detections);
-                    myUser.points_mouth = mouth
+
+                    myUser.detects = detections;
+                    myUser.points_mouth = detections[0].parts.mouth;
+                    socket.emit('updateNosePosition', myUser);
+
                     isMouthInside();
-
-
                 }
 
             }
+
+            $.each(users, function (index, u) {
+                drawLandmarks(u.detects,u.color);
+            });
+
+            
+
+
+
+
 
 
 
@@ -281,19 +321,19 @@
 
         function isMouthInside() {
             //console.log(myUser.x,myUser.y,x,y)
-            
+
             puntos_interes = [
-                              myUser.points_mouth[8],
-                              myUser.points_mouth[9],
-                              myUser.points_mouth[10],
-                              myUser.points_mouth[11]
-                            ]
+                myUser.points_mouth[8],
+                myUser.points_mouth[9],
+                myUser.points_mouth[10],
+                myUser.points_mouth[11]
+            ]
 
             for (let i = 0; i < puntos_interes.length; i++) {
 
                 const x = puntos_interes[i]._x
-                const y = puntos_interes[i]._y           
-                
+                const y = puntos_interes[i]._y
+
 
                 for (var j = 0; j < circles.length; j++) {
                     const xpos = circles[j].xPos;
@@ -302,11 +342,13 @@
 
                     let d = dist(x, y, xpos, ypos)
                     if (d < diametro) {
-                        circles[j]["xPos"] = origin_circles[j].xPos 
+                        circles[j]["xPos"] = origin_circles[j].xPos
                         circles[j]["yPos"] = origin_circles[j].yPos
                         // = color(2555, 200, 255);
                         myUser.coins = myUser.coins + 5;
-                        console.log("Dentrooooo");
+
+
+
                         //return true;
                     } else {
 
@@ -317,12 +359,13 @@
             }
         }
 
-        function drawLandmarks(detections) {
+        function drawLandmarks(detections,c) {
             noFill();
             stroke(161, 95, 251)
             strokeWeight(2)
 
             for (let i = 0; i < detections.length; i++) {
+
                 mouth = detections[i].parts.mouth;
                 /*
                 const nose = detections[i].parts.nose;
@@ -331,7 +374,7 @@
                 const rightEyeBrow = detections[i].parts.rightEyeBrow;
                 const leftEyeBrow = detections[i].parts.leftEyeBrow;
                 */
-                drawPart(mouth, true);
+                drawPart(mouth, true,c);
 
 
 
@@ -346,7 +389,7 @@
 
         }
 
-        function drawPart(feature, closed) {
+        function drawPart(feature, closed,c) {
 
             beginShape();
 
@@ -354,7 +397,19 @@
             for (let i = 0; i < feature.length; i++) {
                 const x = feature[i]._x
                 const y = feature[i]._y
-                stroke(255, 95, 251)
+
+                
+
+
+                if (c != undefined) {
+                    stroke(c);
+                }
+
+
+                //stroke(255, 95, 251);
+
+                //stroke(co)
+
                 vertex(x, y)
 
             }
@@ -367,9 +422,6 @@
             }
 
         }
-
-
-
 
         function drawBox(detections) {
             for (let i = 0; i < detections.length; i++) {
@@ -387,29 +439,12 @@
 
         }
 
-        function drawPose() {
 
-            tint(200, 50);
-
-
-            if (human != null) {
-                p = human.pose
-                let eyeR = p.rightEye;
-                let eyeL = p.leftEye;
-                let x_nose = p.nose.x;
-                let y_nose = p.nose.y;
-                myUser.x = x_nose;
-                myUser.y = y_nose;
-                //let d = dist(eyeR.x, eyeR.y, eyeL.x, eyeL.y);
-                socket.emit('updateNosePosition', myUser);
-
-            }
-
-
-        }
 
         function windowResized() {
-            resizeCanvas(windowWidth / 2, windowHeight / 2);
+
+            //resizeCanvas(windowWidth / 2, windowHeight / 2);
+            resizeCanvas(Width_canvas,Height_canvas);
         }
 
         var sketch_players = function (p) {
@@ -417,15 +452,20 @@
             p.setup = function () {
                 var players_canva = p.createCanvas(500, 1000);
                 players_canva.parent('#jugadores');
+                
             };
 
             p.draw = function () {
-                p.clear()
-                p.textSize(45)
-                p.fill("#fff");
+                p.clear()              
 
-                p.text("Jugadores", 80, 50)
+                
 
+                if(users.length > 0){
+                    p.background("#039be5")
+                    p.textSize(45)
+                    p.fill("#fff");
+                    p.text("Jugadores", 80, 50)
+                }
 
                 $.each(users, function (index, u) {
 

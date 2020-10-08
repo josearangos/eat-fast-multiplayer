@@ -82,7 +82,7 @@
         let poseNet;
         let human = null;
         let skeleton = null;
-        var diam = 20;
+    
 
         var points = [];
 
@@ -133,8 +133,8 @@
             rectW = 100;
             rectH = 100;
 
-            diam = 20
 
+            
             video = createCapture(VIDEO);
             //video.parent('canvas');
             video.size(400, 400);
@@ -179,6 +179,23 @@
             } else {
 
             }
+            */
+
+            /*
+
+            
+            for (var i = 0; i < n_balls; i++) {
+                var x = random(width);
+                var y = random(height / 3);
+                var d = random(20, 150);
+                var cc = color(random(255), random(255), 255);
+                //var s = random(3, 10);
+                var s = random(1, 3);
+
+                circles[i] = new DrawCircle(x, y, d, cc, s);
+                origin_circles[i] = new DrawCircle(x, y, d, cc, s);
+            }
+
             */
 
             drawPose();
@@ -247,6 +264,7 @@
             p.setup = function () {
                 var players_canva = p.createCanvas(500, 1000);
                 players_canva.parent('#jugadores');
+                p.background("")
             };
 
             p.draw = function () {
