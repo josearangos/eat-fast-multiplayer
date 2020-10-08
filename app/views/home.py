@@ -8,7 +8,7 @@ users = []
 points = []
 x_init = 10
 y_init = 100
-n_balls = 10
+n_balls = 8
 
 
 
@@ -21,7 +21,7 @@ def generate_circles(n_balls,width,height):
         y = random.uniform(1,height / 3)
         d = random.randint(20,150)
         cc = [ random.randint(0,255),random.randint(0,255),255]
-        s = random.randint(1,5)
+        s = random.randint(1,3)
         circles_info.append({"s":s,"cc":cc,"y":y,"x":x,"d":d})
         
     return circles_info
